@@ -18,13 +18,13 @@
 #define MATRIX_HEIGHT  -8
 #define MATRIX_TYPE    VERTICAL_ZIGZAG_MATRIX
 
+#define WIFI_SSID     "CORNILLON"
+#define WIFI_KEY      "garterbeltsandstockings"
+
 cLEDMatrix<MATRIX_WIDTH, MATRIX_HEIGHT, MATRIX_TYPE> leds;
 
 cLEDText ScrollingMsg;
 
-const unsigned char TxtDemo[] = { EFFECT_SCROLL_LEFT "    I love you, Penny!"};
-const char* ssid = "Cornillon";
-const char* key  = "";
 const char* url  = "http://192.168.102.139:8000/";
 DynamicJsonDocument doc(2048);        // reasonably sized Json document buffer
 
@@ -61,7 +61,7 @@ void setup()
   WiFi.mode(WIFI_STA);    // Set wifi to Station (Client) mode
   WiFi.disconnect();
   Serial.print("Connecting to wifi");
-  WiFi.begin(ssid, key);
+  WiFi.begin(WIFI_SSID, WIFI_KEY);
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     digitalWrite(STATUS_PIN, HIGH);     // Flash the Status_LED while connecting to Network
@@ -74,7 +74,7 @@ void setup()
   Serial.println("Connected!");
 }
 
-String getMessage() {
+const unsigned char* getMessage() {
   HTTPClient http;
   http.begin(url);                      // Begin HTTP Client
   int httpResponseCode = http.GET();    // Begin GET call
@@ -91,28 +91,36 @@ String getMessage() {
     if(error) {
       Serial.print("Deserialization failed: ");
       Serial.println(error.f_str());
-      String message = "ERROR";
-      http.end();
-      return message;
     }
 
-    String message = doc["message"];
-    http.end();
+    String msg = doc["message"];
+    const unsigned char * message = static_cast<unsigned char *>(msg);
+//    Serial.print("Parsed Message: ");
+//    Serial.println(message);
+     http.end();
     return message;
+}
+
+void displayScrollingMessage(const unsigned char* message)
+{
+  ScrollingMsg.SetText((unsigned char *) message, sizeof(message) - 1);
+  ScrollingMsg.SetTextColrOptions(COLR_RGB | COLR_SINGLE, 0x22, 0xff, 0x22);
+  EVERY_N_MILLISECONDS(50) {
+    if (ScrollingMsg.UpdateText() == -1){
+      ScrollingMsg.SetText((unsigned char *)message, sizeof(message) - 1);  
+    }
+    else{
+      FastLED.show();
+    }
+  }  
 }
 
 void loop()
 {
-//  ScrollingMsg.SetText((unsigned char *)TxtDemo, sizeof(TxtDemo) - 1);
-//  ScrollingMsg.SetTextColrOptions(COLR_RGB | COLR_SINGLE, 0x22, 0xff, 0x22);
-//  if (ScrollingMsg.UpdateText() == -1)
-//    ScrollingMsg.SetText((unsigned char *)TxtDemo, sizeof(TxtDemo) - 1);
-//  else
-//    FastLED.show();
-//  delay(20);
-    String message = getMessage();
-    
-    Serial.print("Message: ");
-    Serial.println(message);
+    const unsigned char* message = getMessage();
+
+    if(message){
+      displayScrollingMessage(message);
+    }
     delay(10 * 1000);                 // Wait a while before re-requesting
 }
