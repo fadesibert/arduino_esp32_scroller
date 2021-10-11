@@ -24,7 +24,7 @@ cLEDText ScrollingMsg;
 
 const unsigned char TxtDemo[] = { EFFECT_SCROLL_LEFT "    I love you, Penny!"};
 const char* ssid = "Cornillon";
-const char* key  = "garterbeltsandstockings";
+const char* key  = "";
 const char* url  = "http://192.168.102.139:8000/";
 DynamicJsonDocument doc(2048);        // reasonably sized Json document buffer
 
