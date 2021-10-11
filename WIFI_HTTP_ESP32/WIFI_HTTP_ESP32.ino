@@ -74,7 +74,7 @@ void setup()
   Serial.println("Connected!");
 }
 
-const unsigned char* getMessage() {
+unsigned char getMessage() {
   HTTPClient http;
   http.begin(url);                      // Begin HTTP Client
   int httpResponseCode = http.GET();    // Begin GET call
@@ -93,15 +93,12 @@ const unsigned char* getMessage() {
       Serial.println(error.f_str());
     }
 
-    String msg = doc["message"];
-    const unsigned char * message = static_cast<unsigned char *>(msg);
-//    Serial.print("Parsed Message: ");
-//    Serial.println(message);
-     http.end();
+    unsigned char message = doc["message"];
+    http.end();
     return message;
 }
 
-void displayScrollingMessage(const unsigned char* message)
+void displayScrollingMessage(unsigned char* message)
 {
   ScrollingMsg.SetText((unsigned char *) message, sizeof(message) - 1);
   ScrollingMsg.SetTextColrOptions(COLR_RGB | COLR_SINGLE, 0x22, 0xff, 0x22);
@@ -117,10 +114,10 @@ void displayScrollingMessage(const unsigned char* message)
 
 void loop()
 {
-    const unsigned char* message = getMessage();
+    unsigned char message = getMessage();
 
     if(message){
-      displayScrollingMessage(message);
+      displayScrollingMessage(&message);
     }
     delay(10 * 1000);                 // Wait a while before re-requesting
 }
