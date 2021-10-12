@@ -14,19 +14,23 @@
 #define CHIPSET         WS2812B
 
 //#define MATRIX_WIDTH   32
-#define MATRIX_WIDTH    96
+#define MATRIX_WIDTH   32
 #define MATRIX_HEIGHT  -8
 #define MATRIX_TYPE    VERTICAL_ZIGZAG_MATRIX
 
-#define WIFI_SSID     "CORNILLON"
+#define WIFI_SSID     "Cornillon"
 #define WIFI_KEY      "garterbeltsandstockings"
 
 cLEDMatrix<MATRIX_WIDTH, MATRIX_HEIGHT, MATRIX_TYPE> leds;
 
 cLEDText ScrollingMsg;
 
+#define DEBUG           false
+#define DELAY_SECONDS   10
+#define DELAY_MILLIS    1000 * DELAY_SECONDS
+
 const char* url  = "http://192.168.102.139:8000/";
-DynamicJsonDocument doc(2048);        // reasonably sized Json document buffer
+DynamicJsonDocument doc(256);        // reasonably sized Json document buffer
 
 
 void repeat_flash(int n, int delay_ms){
@@ -70,54 +74,77 @@ void setup()
     delay(500);
   }
   repeat_flash(3, 50);                  // Flash 3 times in quick succession to indicate connection
-  Serial.println("");
-  Serial.println("Connected!");
+  #if(DEBUG)
+    Serial.println("");
+    Serial.println("Connected!");
+  #endif
 }
 
-unsigned char getMessage() {
-  HTTPClient http;
-  http.begin(url);                      // Begin HTTP Client
-  int httpResponseCode = http.GET();    // Begin GET call
-  if (httpResponseCode > 0) {           // Process Response (naive)
-    Serial.print("HTTP Response Code: ");   // Debug output
-    Serial.println(httpResponseCode);       // Debug output
-  }
-    else {
-      Serial.print("Error code: ");     // Error Code < 0??
-      Serial.println(httpResponseCode);
-    }
 
-    DeserializationError error = deserializeJson(doc, http.getStream());
-    if(error) {
-      Serial.print("Deserialization failed: ");
-      Serial.println(error.f_str());
-    }
-
-    unsigned char message = doc["message"];
-    http.end();
-    return message;
-}
-
-void displayScrollingMessage(unsigned char* message)
+void displayScrollingMessage(String message)
 {
-  ScrollingMsg.SetText((unsigned char *) message, sizeof(message) - 1);
-  ScrollingMsg.SetTextColrOptions(COLR_RGB | COLR_SINGLE, 0x22, 0xff, 0x22);
+//  const unsigned char msg_uc[] = (unsigned char)message.c_str()
+  unsigned char TextMessage[] = { EFFECT_SCROLL_LEFT "TEST" };                                  // Compose the message String into an LED Text Message
+  unsigned char * msg_u = (unsigned char*)TextMessage;                                          // Get a pointer to the LED Text Message
+  ScrollingMsg.SetText(msg_u, sizeof(TextMessage) - 1);                                         //
+  ScrollingMsg.SetTextColrOptions(COLR_RGB | COLR_SINGLE, 0x22, 0xff, 0x22);                    // Set some basic colour options. We can get FANCY later
   EVERY_N_MILLISECONDS(50) {
-    if (ScrollingMsg.UpdateText() == -1){
-      ScrollingMsg.SetText((unsigned char *)message, sizeof(message) - 1);  
+    if (ScrollingMsg.UpdateText() == -1){                                                       // Scroll through the message every 50ms
+      //ScrollingMsg.SetText((unsigned char *)message, sizeof(message) - 1);
+      return;                                                                                   // Only display the message once  
     }
     else{
-      FastLED.show();
+      FastLED.show();                                                                           // Display the updated frame
     }
   }  
 }
 
 void loop()
 {
-    unsigned char message = getMessage();
+  String message;
+  
+  HTTPClient http;
+  http.begin(url);                      // Begin HTTP Client
+  int httpResponseCode = http.GET();    // Begin GET call
+  if (httpResponseCode > 0) {           // Process Response (naive)
+    #if(DEBUG)
+      Serial.print("HTTP Response Code: ");   // Debug output
+      Serial.println(httpResponseCode);       // Debug output
+    #endif
+//    if (httpResponseCode == 200 || httpResponseCode == 404){
+//      //proceed
+//    }
+  }
 
-    if(message){
-      displayScrollingMessage(&message);
+    else {
+      Serial.print("Error code: ");     // Error Code < 0??
+      Serial.println(httpResponseCode);
     }
-    delay(10 * 1000);                 // Wait a while before re-requesting
+    
+    DeserializationError error = deserializeJson(doc, http.getStream());
+    if(error) {
+      #if(DEBUG)
+        Serial.print("Deserialization failed: ");
+        Serial.println(error.f_str());
+      #endif
+    }
+    
+    if(doc.containsKey("message")){
+      message = doc["message"].as<String>();
+      #if(DEBUG)
+        Serial.println(message);
+        Serial.flush();
+        Serial.println("Displaying message...");
+      #endif
+      repeat_flash(5, 50);
+      displayScrollingMessage(message);
+    }
+    else {
+      #if(DEBUG)
+        Serial.println("document does not contain a message");
+      #endif
+    }
+
+    http.end();
+    delay(DELAY_MILLIS);                 // Re-write this as a sleep call
 }
