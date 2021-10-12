@@ -18,8 +18,8 @@
 #define MATRIX_HEIGHT  -8
 #define MATRIX_TYPE    VERTICAL_ZIGZAG_MATRIX
 
-#define WIFI_SSID     "Cornillon"
-#define WIFI_KEY      "garterbeltsandstockings"
+#define WIFI_SSID     "UPDATE_ME"
+#define WIFI_KEY      "UPDATE_ME"
 
 cLEDMatrix<MATRIX_WIDTH, MATRIX_HEIGHT, MATRIX_TYPE> leds;
 
