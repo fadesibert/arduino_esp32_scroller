@@ -83,18 +83,22 @@ void setup()
 
 void displayScrollingMessage(String message)
 {
-//  const unsigned char msg_uc[] = (unsigned char)message.c_str()
-  unsigned char TextMessage[] = { EFFECT_SCROLL_LEFT "TEST" };                                  // Compose the message String into an LED Text Message
-  unsigned char * msg_u = (unsigned char*)TextMessage;                                          // Get a pointer to the LED Text Message
-  ScrollingMsg.SetText(msg_u, sizeof(TextMessage) - 1);                                         //
-  ScrollingMsg.SetTextColrOptions(COLR_RGB | COLR_SINGLE, 0x22, 0xff, 0x22);                    // Set some basic colour options. We can get FANCY later
+  char msg_c[254];
+  unsigned char msg_uc[256] = {EFFECT_SCROLL_LEFT};                             // Prepare for an array of unsigned char
+
+  strncpy(msg_c, message.c_str(), 254);
+  
+  std::copy(msg_c+2, msg_c + 256, msg_uc);                                      // Copy the char array to unsigned char, correctly converting
+  const unsigned char * TextMessage[] = { msg_uc };                              // Compose the message String into an LED Text Message
+  ScrollingMsg.SetText(msg_uc, 255);                                            // Finally, pass to ScrollingMsg
+  ScrollingMsg.SetTextColrOptions(COLR_RGB | COLR_SINGLE, 0x22, 0xff, 0x22);    // Set some basic colour options. We can get FANCY later
   EVERY_N_MILLISECONDS(50) {
-    if (ScrollingMsg.UpdateText() == -1){                                                       // Scroll through the message every 50ms
+    if (ScrollingMsg.UpdateText() == -1){                                       // Scroll through the message every 50ms
       //ScrollingMsg.SetText((unsigned char *)message, sizeof(message) - 1);
-      return;                                                                                   // Only display the message once  
+      return;                                                                   // Only display the message once  
     }
     else{
-      FastLED.show();                                                                           // Display the updated frame
+      FastLED.show();                                                           // Display the updated frame
     }
   }  
 }
