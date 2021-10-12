@@ -6,3 +6,5 @@ Code for pulling text from an API endpoint and scrolling it across a matrix
 * Tweak the code if you want to display a different key than "message"
 
 This works on an ESP32 with Wifi running Arduino. Works (barely) on a 32x8 matrix (may have to shave a bit and go for 30x7) on an Arduino Nano or similar
+
+If compiling using the Arudino IDE, make sure you have LEDText, LEDMatrix, ArduinoJSON, FastLED
