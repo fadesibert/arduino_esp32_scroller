@@ -22,12 +22,16 @@
 #define WIFI_KEY      "UPDATE_ME"
 
 cLEDMatrix<MATRIX_WIDTH, MATRIX_HEIGHT, MATRIX_TYPE> leds;
-
 cLEDText ScrollingMsg;
 
 #define DEBUG           false
 #define DELAY_SECONDS   10
 #define DELAY_MILLIS    1000 * DELAY_SECONDS
+
+#define uS_TO_S_FACTOR	1000000
+#define TIME_TO_SLEEP	10
+
+RTC_DATA_ATTR int bootCount = 0;
 
 const char* url  = "http://192.168.102.139:8000/";
 DynamicJsonDocument doc(256);        // reasonably sized Json document buffer
@@ -42,7 +46,7 @@ void repeat_flash(int n, int delay_ms){
 void flash(int delay_ms)
 {
   int before = digitalRead(STATUS_PIN); // don't just turn the pin off, set back to original state
-  digitalWrite(STATUS_PIN, HIGH);       // Flash LED on for delay)ns
+  digitalWrite(STATUS_PIN, HIGH);       // Flash LED on for delay_ms
   delay(delay_ms);
   digitalWrite(STATUS_PIN, LOW);
   digitalWrite(STATUS_PIN, before);     // Restore LED state
@@ -50,6 +54,11 @@ void flash(int delay_ms)
 
 void setup()
 {
+  ++bootCount;
+  #if(DEBUG)
+    Serial.println("Boot number: " + String(bootCount));
+  #endif
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds[0], leds.Size());
   FastLED.setBrightness(16);            // Could control this with a pot
   FastLED.clear(true);                  // Clear the noise
@@ -78,6 +87,8 @@ void setup()
     Serial.println("");
     Serial.println("Connected!");
   #endif
+
+  
 }
 
 
@@ -150,5 +161,6 @@ void loop()
     }
 
     http.end();
-    delay(DELAY_MILLIS);                 // Re-write this as a sleep call
+    Serial.flush();
+    esp_deep_sleep_start();
 }
