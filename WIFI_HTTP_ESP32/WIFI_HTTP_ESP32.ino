@@ -69,12 +69,12 @@ void setup()
   pinMode(STATUS_PIN, OUTPUT);          // Set Status LED pin to Output
   pinMode(SWITCH_PIN, INPUT);
   uint8_t read_sw_var = digitalRead(SWITCH_PIN);
-  if (read_sw_var):                     // If the switch is in the off position
+  if (read_sw_var){                     // If the switch is in the off position
     #if(DEBUG)
       Serial.println("Sleep switch is ON, going to deep sleep")
     #endif
     esp_deep_sleep_start();             // activate the deep sleep
-
+  }
   /* Initialize the LEDs */
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds[0], leds.Size());
   FastLED.setBrightness(16);            // Could control this with a pot
@@ -92,17 +92,15 @@ void setup()
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     digitalWrite(STATUS_PIN, HIGH);     // Flash the Status_LED while connecting to Network
-    delay(500);
+    delay(300);
     digitalWrite(STATUS_PIN, LOW);
     delay(500);
   }
-  repeat_flash(3, 50);                  // Flash 3 times in quick succession to indicate connection
+  repeat_flash(3, 150);                  // Flash 3 times in quick succession to indicate connection
   #if(DEBUG)
     Serial.println("");
     Serial.println("Connected!");
-  #endif
-
-  
+  #endif  
 }
 
 
