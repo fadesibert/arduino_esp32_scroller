@@ -18,6 +18,8 @@
 #define MATRIX_HEIGHT  -8
 #define MATRIX_TYPE    VERTICAL_ZIGZAG_MATRIX
 
+#define API_KEY       "REPLACE_ME"
+#define API_HEADER    "X-API-Authenticator"
 #define WIFI_SSID     "UPDATE_ME"
 #define WIFI_KEY      "UPDATE_ME"
 
@@ -30,6 +32,7 @@ cLEDText ScrollingMsg;
 
 #define uS_TO_S_FACTOR	1000000
 #define TIME_TO_SLEEP	10
+
 
 RTC_DATA_ATTR int bootCount = 0;
 
@@ -119,16 +122,15 @@ void loop()
   String message;
   
   HTTPClient http;
-  http.begin(url);                      // Begin HTTP Client
+  http.begin(url);                      // Begin HTTP Clienta
+  http.addHeader(API_HEADER, API_KEY)
+  
   int httpResponseCode = http.GET();    // Begin GET call
   if (httpResponseCode > 0) {           // Process Response (naive)
     #if(DEBUG)
       Serial.print("HTTP Response Code: ");   // Debug output
       Serial.println(httpResponseCode);       // Debug output
     #endif
-//    if (httpResponseCode == 200 || httpResponseCode == 404){
-//      //proceed
-//    }
   }
 
     else {
