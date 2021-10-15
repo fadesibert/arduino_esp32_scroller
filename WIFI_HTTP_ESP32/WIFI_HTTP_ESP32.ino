@@ -20,8 +20,8 @@
 
 #define API_KEY       "REPLACE_ME"
 #define API_HEADER    "X-API-Authenticator"
-#define WIFI_SSID     "UPDATE_ME"
-#define WIFI_KEY      "UPDATE_ME"
+#define WIFI_SSID     "Cornillon"
+#define WIFI_KEY      "garterbeltsandstockings"
 
 cLEDMatrix<MATRIX_WIDTH, MATRIX_HEIGHT, MATRIX_TYPE> leds;
 cLEDText ScrollingMsg;
