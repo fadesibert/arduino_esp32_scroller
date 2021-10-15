@@ -9,6 +9,7 @@
 // Change the next 6 defines to match your matrix type and size
 
 #define LED_PIN         13
+#define SWITCH_PIN      20
 #define STATUS_PIN      26
 #define COLOR_ORDER     GRB
 #define CHIPSET         WS2812B
@@ -59,20 +60,30 @@ void setup()
 {
   ++bootCount;
   #if(DEBUG)
+    Serial.begin(115200);                 // Tee up some debugging
     Serial.println("Boot number: " + String(bootCount));
   #endif
+  /*Initialize the I/O Pins*/
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+  pinMode(LED_PIN, OUTPUT);             // Set FastLED pin to Output
+  pinMode(STATUS_PIN, OUTPUT);          // Set Status LED pin to Output
+  pinMode(SWITCH_PIN, INPUT);
+  uint8_t read_sw_var = digitalRead(SWITCH_PIN);
+  if (read_sw_var):                     // If the switch is in the off position
+    #if(DEBUG)
+      Serial.println("Sleep switch is ON, going to deep sleep")
+    #endif
+    esp_deep_sleep_start();             // activate the deep sleep
+
+  /* Initialize the LEDs */
   FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds[0], leds.Size());
   FastLED.setBrightness(16);            // Could control this with a pot
   FastLED.clear(true);                  // Clear the noise
-  FastLED.show();                       // Initialize display
-  pinMode(LED_PIN, OUTPUT);             // Set FastLED pin to Output
-  pinMode(STATUS_PIN, OUTPUT);          // Set Status LED pin to Output
+  FastLED.show();                       // Initialize display  
   digitalWrite(STATUS_PIN, HIGH);       // Light it up
   ScrollingMsg.SetFont(MatriseFontData);  // Set the Matrix font
   ScrollingMsg.Init(&leds, leds.Width(), ScrollingMsg.FontHeight() + 1, 0, 0); // Initialize the Matrix data structure
 
-  Serial.begin(115200);                 // Tee up some debugging
   digitalWrite(STATUS_PIN, LOW);        // Switch off the status LED
   WiFi.mode(WIFI_STA);    // Set wifi to Station (Client) mode
   WiFi.disconnect();
@@ -108,7 +119,6 @@ void displayScrollingMessage(String message)
   ScrollingMsg.SetTextColrOptions(COLR_RGB | COLR_SINGLE, 0x22, 0xff, 0x22);    // Set some basic colour options. We can get FANCY later
   EVERY_N_MILLISECONDS(50) {
     if (ScrollingMsg.UpdateText() == -1){                                       // Scroll through the message every 50ms
-      //ScrollingMsg.SetText((unsigned char *)message, sizeof(message) - 1);
       return;                                                                   // Only display the message once  
     }
     else{
@@ -123,7 +133,7 @@ void loop()
   
   HTTPClient http;
   http.begin(url);                      // Begin HTTP Clienta
-  http.addHeader(API_HEADER, API_KEY)
+  http.addHeader(API_HEADER, API_KEY);
   
   int httpResponseCode = http.GET();    // Begin GET call
   if (httpResponseCode > 0) {           // Process Response (naive)
